@@ -1,8 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import App from './components/App';
-import {createStore} from 'redux';
-import reducer, {redux_devtools} from './reducers';
+import {Provider} from 'react-redux';
+import {store} from './reducers';
 
 import './index.css';
 
@@ -12,8 +12,12 @@ export function index(): void {
         throw new Error('\'#root\' must be a html element.');
     }
 
-    const store: * = createStore(reducer, redux_devtools());
-    ReactDOM.render(<App store={store}/>, root);
+    const app = (
+        <Provider store={store()}>
+          <App/>
+        </Provider>
+    );
+    ReactDOM.render(app, root);
 }
 
 index();
