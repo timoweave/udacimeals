@@ -1,7 +1,7 @@
 import {ADD_RECIPE, REMOVE_FROM_CALENDAR} from '../actions';
 // import {BREAKFAST, LUNCH, DINNER} from '../actions';
 // import {SUNDAY, MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY} from '../actions';
-import type {Action, Meal}  from '../actions';
+import type {Action}  from '../actions';
 
 export type MealTime = {
     breakfast: ?string,
@@ -28,6 +28,10 @@ const initialCalendarState: CalendarMeal = {
     friday: { breakfast: null,  lunch: null, dinner: null, },
     saturday: { breakfast: null,  lunch: null, dinner: null, },
 }
+
+export const redux_devtools = () => {
+    return window && window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__();
+};
 
 export default function calendar(state: CalendarMeal = initialCalendarState, action: Action) {
     switch(action.type) {
