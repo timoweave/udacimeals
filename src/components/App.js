@@ -2,6 +2,8 @@ import React, { Component } from 'react';
 import logo from './logo.svg';
 import './App.css';
 
+import type {Element} from 'react';
+
 export type Props  = {
 };
 
@@ -9,7 +11,7 @@ export type State = {
 };
 
 class App extends Component<Props, State> {
-  render() {
+    render(): Element<'div'> {
     return (
       <div className="App">
         <header className="App-header">
