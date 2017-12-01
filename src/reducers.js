@@ -1,11 +1,10 @@
 import {createStore, combineReducers} from 'redux';
 import {TOGGLE_MODAL, LOADING_FOOD} from './types';
-import {ADD_RECIPE, REMOVE_FROM_WEEK, NO_ACTION} from './types';
-import {SUNDAY, MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY} from './types';
+import {ADD_RECIPE, REMOVE_FROM_WEEK} from './types';
 import {dayOrder, initAction, initWeekState, initFoodState, initAppState} from './types';
 
 import type {WeekState, FoodState, AppState} from './types';
-import type {BreakfastLunchDinner, WeekAction, AppAction, NoAction} from './types';
+import type {BreakfastLunchDinner, WeekAction, AppAction} from './types';
 
 export function week(state: WeekState = initWeekState, action: WeekAction = initAction): WeekState {
     switch(action.type) {
