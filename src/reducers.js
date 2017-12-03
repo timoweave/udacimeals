@@ -1,29 +1,53 @@
-import {createStore, combineReducers} from 'redux';
-import {TOGGLE_MODAL, LOADING_FOOD} from './types';
-import {ADD_RECIPE, REMOVE_FROM_WEEK} from './types';
-import {dayOrder, initAction, initWeekState, initFoodState, initAppState} from './types';
+import {createStore, combineReducers, compose, applyMiddleware} from "redux";
+import thunk from "redux-thunk";
+import createHistory from "history/createBrowserHistory";
+import {ConnectedRouter, routerReducer as router} from "react-router-redux";
+import {routerMiddleware} from "react-router-redux";
+import {composeWithDevTools} from "redux-devtools-extension";
 
-import type {WeekState, FoodState, AppState} from './types';
-import type {BreakfastLunchDinner, WeekAction, AppAction} from './types';
+import {TOGGLE_MODAL, SAVE_MODAL, OPEN_MODAL, CLOSE_MODAL} from "./types";
+import {LOADING_FOOD, NO_ACTION} from "./types";
+import {ADD_RECIPE, REMOVE_FROM_WEEK} from "./types";
+import {SEARCH_FOODS, SEARCH_FOODS_DONE, SEARCH_FOODS_ERROR} from "./types";
+import {ADD_ONE_FOOD} from "./types";
+import {dayOrder} from "./types";
+import {
+    initAction,
+    initWeekState,
+    initFoodState,
+    initConfigState,
+} from "./types";
+import {searchAllFoods} from "./actions";
+import {fetchRecipes} from "./api";
 
-export function week(state: WeekState = initWeekState, action: WeekAction = initAction): WeekState {
-    switch(action.type) {
-    case ADD_RECIPE: {
-        const {day, time, meal} = action;
-        const new_meal = {[day]: {...state[day], [time]: meal}};
-        return {...state, ...new_meal};
-    }
-    case REMOVE_FROM_WEEK: {
-        const {day, time} = action;
-        const remove_meal = {[day]: {...state[day], [time]: null}};
-        return {...state, ...remove_meal};
-    }
-    default:
-        return state;
+import type {WeekState, FoodState, ConfigState} from "./types";
+import type {BreakfastLunchDinner} from "./types";
+import type {WeekAction, FoodAction, ConfigAction} from "./types";
+
+export function week(
+    state: WeekState = initWeekState,
+    action: WeekAction = initAction,
+): WeekState {
+    switch (action.type) {
+        case ADD_RECIPE: {
+            const {day, time, meal} = action;
+            const new_meal = {[day]: {...state[day], [time]: meal}};
+            return {...state, ...new_meal};
+        }
+        case REMOVE_FROM_WEEK: {
+            const {day, time} = action;
+            const remove_meal = {[day]: {...state[day], [time]: null}};
+            return {...state, ...remove_meal};
+        }
+        case NO_ACTION:
+        default:
+            return state;
     }
 }
 
-export function getOrderedDayMeals(state: WeekState): Array<BreakfastLunchDinner> {
+export function getOrderedDayMeals(
+    state: WeekState,
+): Array<BreakfastLunchDinner> {
     return dayOrder.reduce((result, day) => {
         result.push({
             day: day,
@@ -35,38 +59,84 @@ export function getOrderedDayMeals(state: WeekState): Array<BreakfastLunchDinner
     }, []);
 }
 
-export function food(state: FoodState = initFoodState, action: WeekAction = initAction): FoodState {
+export function recipes(
+    state: FoodState = initFoodState,
+    action: FoodAction = initAction,
+): FoodState {
     switch (action.type) {
-    case ADD_RECIPE: {
-        const {meal} = action;
-        if (meal && meal.label) {
-            return {foods: [...state.foods, meal], [meal.label]: meal};
+        case SEARCH_FOODS: {
+            console.log({state, action});
+            return {...state, foods: []};
+        }
+        case SEARCH_FOODS_DONE: {
+            const {foods} = action;
+            console.log({state, action});
+            return {...state, foods};
+        }
+        case SEARCH_FOODS_ERROR: {
+            console.log({state, action});
+            // const foods = fetchRecipes(action.query);
+            return state;
+        }
+        case ADD_ONE_FOOD: {
+            return state;
+            /*
+        if (action && action.meal && action.meal.label) {
+            return state;
         } else {
             return state;
         }
-    }
-    default:
-        return state;
-    }
-}
-
-export function app(state: AppState = initAppState, action: AppAction = initAction): AppState {
-    switch(action.type) {
-    case TOGGLE_MODAL:
-        return {...state, opened: action.opened};
-    case LOADING_FOOD:
-        return {...state, loaded: action.loaded};
-    default:
-        return state;
+        */
+        }
+        case NO_ACTION:
+        default:
+            return state;
     }
 }
 
-export const redux_devtools = () => {
-    return window && window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__();
-};
+export function config(
+    state: ConfigState = initConfigState,
+    action: ConfigAction = initAction,
+): ConfigState {
+    switch (action.type) {
+        case CLOSE_MODAL:
+            console.log({action, state});
+            return {...state, opened: false, day: null, time: null, meal: null};
+        case SAVE_MODAL: {
+            const {day, time, meal} = action;
+            return {...state, day, time, meal};
+        }
+        case OPEN_MODAL: {
+            const {day, time, meal} = action;
+            console.log({action, state, day, time, meal});
+            return {...state, opened: true, day, time, meal};
+        }
+        case TOGGLE_MODAL:
+            console.log({action, state});
+            return {...state, opened: action.opened};
+        case LOADING_FOOD:
+            console.log({action, state});
+            return {...state, loaded: action.loaded};
+        case NO_ACTION:
+        default:
+            return state;
+    }
+}
 
-export const reducers = combineReducers({week, food, app});
+export const history = createHistory();
+const router_history = routerMiddleware(history);
 
-export const store = () => createStore(reducers, redux_devtools());
+export const reducers = combineReducers({
+    week,
+    recipes,
+    config,
+    router,
+});
+
+export const store = () =>
+    createStore(
+        reducers,
+        composeWithDevTools(applyMiddleware(thunk, router_history)),
+    );
 
 export default reducers;
