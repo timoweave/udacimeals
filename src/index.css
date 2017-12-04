@@ -83,11 +83,11 @@ li {
 .meal svg {
   margin: 0 auto;
   display: block;
-  margin-top: 15px;
   cursor: pointer;
 }
 
 .overlay {
+  z-index: 10;
   position: fixed;
   top: 0px;
   left: 0px;
@@ -176,18 +176,23 @@ li {
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
 }
 
 .food-item img {
+  z-index: 0;
+  margin-top: -32px;
   width: 100px;
   height: 100px;
-  border-radius: 3px;
+  border-radius: 0;
 }
 
 .food-item button {
-  background: none;
+  background: lightgrey;
+  opacity: 0.5;
   border: none;
+  border-radius: 0;
   text-decoration: underline;
   font-size: 14px;
-  margin-top: 5px;
+  padding-top: 5px;
 }

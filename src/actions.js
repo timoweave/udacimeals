@@ -1,14 +1,15 @@
 import {ADD_RECIPE, REMOVE_FROM_WEEK} from "./types";
-import {LOADING_FOOD} from "./types";
+import {LOADING_FOOD, LOAD_CACHED_FOODS} from "./types";
 import {SAVE_MODAL, OPEN_MODAL, CLOSE_MODAL} from "./types";
 import {SEARCH_FOODS, SEARCH_FOODS_DONE, SEARCH_FOODS_ERROR} from "./types";
-import {SEARCH_FOODS_CLEAR} from "./types";
+import {SEARCH_FOODS_CLEAR, SELECT_FOOD} from "./types";
 import {fetchRecipes} from "./api";
 
-import type {Dispatch, SearchAllFoodClearAction} from "./types";
+import type {Dispatch} from "./types";
+import type {SearchAllFoodClearAction, SelectFoodAction} from "./types";
 import type {AddRecipeAction, RemoveFromWeekAction} from "./types";
-import type {LoadingFoodAction, CloseModalAction} from "./types";
-import type {SaveModalAction, OpenModalAction} from "./types";
+import type {LoadingFoodAction, LoadCachedFoodsAction} from "./types";
+import type {SaveModalAction, OpenModalAction, CloseModalAction} from "./types";
 import type {Time, Day, Meal, DayTimeMeal, Loaded} from "./types";
 
 export function addRecipe({day, time, meal}: DayTimeMeal): AddRecipeAction {
@@ -40,6 +41,14 @@ export function closeFoodModal(): CloseModalAction {
 
 export function loadingFood({loaded}: Loaded): LoadingFoodAction {
     return {type: LOADING_FOOD, loaded};
+}
+
+export function loadCachedFoods(): LoadCachedFoodsAction {
+    return {type: LOAD_CACHED_FOODS};
+}
+
+export function selectFood(meal: Meal): SelectFoodAction {
+    return {type: SELECT_FOOD, selected: meal};
 }
 
 export function clearSearchAllFoods(): SearchAllFoodClearAction {

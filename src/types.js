@@ -119,7 +119,6 @@ export type RemoveFromWeekAction = {
 export const OPEN_MODAL: "OPEN_MODAL" = "OPEN_MODAL";
 export const SAVE_MODAL: "SAVE_MODAL" = "SAVE_MODAL";
 export const CLOSE_MODAL: "CLOSE_MODAL" = "CLOSE_MODAL";
-export const LOADING_FOOD: "LOADING_FOOD" = "LOADING_FOOD";
 
 export type OpenModalAction = {
     +type: typeof OPEN_MODAL,
@@ -139,16 +138,22 @@ export type CloseModalAction = {
     +type: typeof CLOSE_MODAL,
 };
 
+export const SEARCH_FOODS: "SEARCH_FOODS" = "SEARCH_FOODS";
+export const SEARCH_FOODS_DONE: "SEARCH_FOODS_DONE" = "SEARCH_FOODS_DONE";
+export const SEARCH_FOODS_ERROR: "SEARCH_FOODS_ERROR" = "SEARCH_FOODS_ERROR";
+export const SEARCH_FOODS_CLEAR: "SEARCH_FOODS_CLEAR" = "SEARCH_FOODS_CLEAR";
+export const SELECT_FOOD: "SELECT_FOOD" = "SELECT_FOOD";
+export const LOAD_CACHED_FOODS: "LOAD_CACHED_FOODS" = "LOAD_CACHED_FOODS";
+export const LOADING_FOOD: "LOADING_FOOD" = "LOADING_FOOD";
+
 export type LoadingFoodAction = {
     +type: typeof LOADING_FOOD,
     loaded: boolean,
 };
 
-export const SEARCH_FOODS: "SEARCH_FOODS" = "SEARCH_FOODS";
-export const SEARCH_FOODS_DONE: "SEARCH_FOODS_DONE" = "SEARCH_FOODS_DONE";
-export const SEARCH_FOODS_ERROR: "SEARCH_FOODS_ERROR" = "SEARCH_FOODS_ERROR";
-export const SEARCH_FOODS_CLEAR: "SEARCH_FOODS_CLEAR" = "SEARCH_FOODS_CLEAR";
-export const ADD_ONE_FOOD: "ADD_ONE_FOOD" = "ADD_ONE_FOOD";
+export type LoadCachedFoodsAction = {
+    +type: typeof LOAD_CACHED_FOODS,
+};
 
 export type SearchAllFoodAction = {
     +type: typeof SEARCH_FOODS,
@@ -172,8 +177,8 @@ export type SearchAllFoodClearAction = {
     +founds: [],
 };
 
-export type AddFoodAction = {
-    +type: typeof ADD_ONE_FOOD,
+export type SelectFoodAction = {
+    +type: typeof SELECT_FOOD,
     +meal: Meal,
 };
 
@@ -184,11 +189,11 @@ export type FoodAction =
     | SearchAllFoodDoneAction
     | SearchAllFoodErrorAction
     | SearchAllFoodClearAction
-    | AddFoodAction
+    | LoadingFoodAction
+    | SelectFoodAction
     | NoAction;
 
 export type ConfigAction =
-    | LoadingFoodAction
     | OpenModalAction
     | CloseModalAction
     | SaveModalAction
@@ -210,6 +215,7 @@ export type WeekState = {
 
 export type FoodState = {
     founds: Array<Meal>,
+    selected: ?Meal,
     [string]: Meal,
 };
 
@@ -240,6 +246,7 @@ export const initWeekState: WeekState = {
 };
 
 export const initFoodState: FoodState = {
+    selected: null,
     founds: [],
 };
 

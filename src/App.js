@@ -3,7 +3,8 @@ import Modal from "react-modal";
 import Loading from "react-loading";
 import RightArrow from "react-icons/lib/fa/arrow-circle-right";
 import CalendarPlusO from "react-icons/lib/fa/calendar-plus-o";
-import CalendarTimesO from "react-icons/lib/fa/calendar-times-o";
+import CheckList from "react-icons/lib/go/checklist";
+import TimesCircleO from "react-icons/lib/fa/times-circle-o";
 import {DebounceInput as Input} from "react-debounce-input";
 
 import {Component} from "react";
@@ -14,6 +15,7 @@ import {Switch} from "react-router-dom";
 import {getOrderedDayMeals} from "./reducers";
 import {addRecipe, removeFromWeek} from "./actions";
 import {searchAllFoods, clearSearchAllFoods} from "./actions";
+import {selectFood, loadCachedFoods} from "./actions";
 import {openFoodModal, saveFoodModal, closeFoodModal} from "./actions";
 import {timeOrder, MONDAY} from "./types";
 import {capitalize} from "./helpers";
@@ -45,29 +47,31 @@ export function Header(props: HeaderProps): Element<"ul"> {
 }
 
 export function Entry(props: EntryProps): Element<"div"> {
-    const {day, time, meal = null, open = null} = props;
+    const {day, time, meal = null, open = null, remove = null} = props;
     const add = () => {
         console.log({day, time, meal, open});
         open && open("/search", day, time, meal);
     };
-    const del = () => open && open("/list", day, time, meal);
+    const del = () => remove && remove({day, time});
     const list = () => () => open && open("/list", day, time, meal);
     const meal_picked = meal !== null && meal !== undefined;
 
     return meal_picked ? (
         <div className="food-item">
             <img src={meal && meal.image} alt={meal && meal.label} />
-            <button className="icon-btn" onClick={list}>
-                <CalendarTimesO size={30} />
-            </button>
-            <button className="icon-btn" onClick={del}>
-                <CalendarTimesO size={30} />
-            </button>
+            <div className="bottom-btns">
+                <button className="icon-btn" onClick={del}>
+                    <TimesCircleO size={20} />
+                </button>
+                <button className="icon-btn" onClick={list}>
+                    <CheckList size={20} />
+                </button>
+            </div>
         </div>
     ) : (
         <div>
             <button className="icon-btn" onClick={add}>
-                <CalendarPlusO size={30} />
+                <CalendarPlusO size={100} />
             </button>
         </div>
     );
@@ -77,8 +81,11 @@ function mapDispatchToEntry(dispatch: *): * {
     return {
         open: (url: string, day: Day, time: Time, meal: ?Meal): void => {
             dispatch(push(`${url}/${day}/${time}`));
+            dispatch(loadCachedFoods());
             dispatch(openFoodModal({day, time, meal}));
         },
+        remove: ({day, time}: DayTimeMeal): void =>
+            dispatch(removeFromWeek({day, time, meal: null})),
     };
 }
 
@@ -174,38 +181,48 @@ export function ShoppingList(props: ShoppingListProps): Element<"div"> {
         <div className="ingredients-list">
             <h3 className="subheader">Your Shopping List</h3>
             <ul>
-                {list.map((item: string): Element<"li"> => (
-                    <li key={item}>{item}</li>
+                {list.map((item: string, ith: number): Element<"li"> => (
+                    <li key={ith}>{item}</li>
                 ))}
             </ul>
         </div>
     );
 }
 
-export function FoodList({foods, onSelect}: any): Element<"ul" | "p"> {
+export function FoodList(props: any): Element<"div"> {
+    const {day, time, foods, onSelect, onSave} = props;
+
     if (foods.length === 0) {
-        return <p>Your search has 0 results.</p>;
+        return (
+            <div>
+                <p>Your search has 0 results.</p>
+            </div>
+        );
     }
 
     const trim = str =>
         str && str.length > 16 ? str.slice(0, 16) + "..." : str;
-
+    console.log({FoodList: "component", len: foods.length, foods});
     return (
-        <ul className="food-list">
-            {foods.map(({label, image, calories, source}: Meal): Element<
-                "li",
-            > => (
-                <li
-                    onClick={() => onSelect({label, image, calories, source})}
-                    key={label}
-                >
-                    <h3>{trim(label)}</h3>
-                    <img src={image} alt={label} />
-                    <div>{Math.floor(calories || 0)} Calories</div>
-                    <div>{source}</div>
-                </li>
-            ))}
-        </ul>
+        <div>
+            <ul className="food-list">
+                {foods.map((meal: Meal): Element<"li"> => {
+                    const {id, label, image, calories, source} = meal;
+                    const select = () => {
+                        onSelect(day, time, meal);
+                        onSave(meal);
+                    };
+                    return (
+                        <li onClick={select} key={id}>
+                            <h3>{trim(label)}</h3>
+                            <img src={image} alt={label} />
+                            <div>{Math.floor(calories || 0)} Calories</div>
+                            <div>{source}</div>
+                        </li>
+                    );
+                })}
+            </ul>
+        </div>
     );
 }
 
@@ -213,9 +230,17 @@ export function Search(props: *): Element<typeof Modal> {
     const {day, time, meal, founds, path} = props;
     const {opened, save, search, select, close} = props;
     const tip = "search food";
-
+    console.log({day, time, meal});
+    const presave = meal => save(day, time, meal);
+    const style = {width: "80%", height: "80%"};
     return (
-        <Modal isOpen={opened} style={{width: "80%", height: "80%"}}>
+        <Modal
+            isOpen={opened}
+            style={style}
+            overlayClassName="overlay"
+            className="modal"
+            contentLabel="Modal"
+        >
             <h1>
                 {day !== null && time !== null
                     ? `Meal for ${capitalize(day)} ${capitalize(time)}`
@@ -223,20 +248,26 @@ export function Search(props: *): Element<typeof Modal> {
             </h1>
             <Input debounceTimeout={300} placeholder={tip} onChange={search} />
             <button onClick={() => close()}>Cancel</button>
-            <button onClick={save(day, time, meal)}>Save</button>
+            {<button onClick={save(day, time, meal)}>Save</button>}
             {founds.length ? <h2>Recipes Found </h2> : null}
-            <FoodList foods={founds} onSelect={select} />
+            <FoodList
+                day={day}
+                time={time}
+                foods={founds}
+                onSelect={select}
+                onSave={presave}
+            />
         </Modal>
     );
 }
 
 function mapStateToSearch(state: Store): * {
-    const {founds} = state.foods;
+    const {founds, selected: meal} = state.foods;
     const {pathname} = state.router.location;
     const opened = pathname.match("^/search") === null ? false : true;
     const [root, add, day, time] = pathname.split("/");
 
-    return {...state.config, founds, opened, day, time};
+    return {...state.config, founds, opened, day, time, meal};
 }
 
 function mapDispatchToSearch(dispatch: *): * {
@@ -253,10 +284,17 @@ function mapDispatchToSearch(dispatch: *): * {
                 dispatch(searchAllFoods(query));
             }
         },
-        select: ({label, image, calories, source}): void => {},
+        select: (day: Day, time: Time, meal: Meal): void => {
+            console.log({meal});
+            dispatch(selectFood(meal));
+            dispatch(addRecipe({day, time, meal}));
+            dispatch(goBack());
+        },
         save: (day: Day, time: Time, meal: Meal): * => {
             return (event: *): void => {
-                dispatch(saveFoodModal(day, time, meal));
+                console.log({save: "search", day, time, meal});
+                // dispatch(selectFood(meal));
+                dispatch(addRecipe({day, time, meal}));
                 dispatch(goBack());
             };
         },
