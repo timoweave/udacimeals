@@ -36,12 +36,13 @@ export type Time = typeof BREAKFAST | typeof LUNCH | typeof DINNER;
 export const timeOrder: Array<Time> = [BREAKFAST, LUNCH, DINNER];
 
 export type Meal = {
-    +uri?: string, // key
-    +label?: string,
-    +image?: string,
-    +calories?: number,
-    +source?: string,
-    +ingredientLines?: Array<string>,
+    +id: string,
+    +uri: string,
+    +label: string,
+    +image: string,
+    +calories: number,
+    +source: string,
+    +ingredientLines: Array<string>,
 };
 
 export type DayTimeMeal = {

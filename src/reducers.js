@@ -1,9 +1,9 @@
-import {createStore, combineReducers, compose, applyMiddleware} from "redux";
+import {createStore, combineReducers, applyMiddleware} from "redux";
 import thunk from "redux-thunk";
 import {createBrowserHistory} from "history";
-import {ConnectedRouter, routerReducer as router} from "react-router-redux";
+import {routerReducer as router} from "react-router-redux";
 import {routerMiddleware} from "react-router-redux";
-import {composeWithDevTools} from "redux-devtools-extension";
+import {composeWithDevTools as compose} from "redux-devtools-extension";
 
 import {SAVE_MODAL, OPEN_MODAL, CLOSE_MODAL} from "./types";
 import {LOADING_FOOD, NO_ACTION} from "./types";
@@ -11,12 +11,8 @@ import {ADD_RECIPE, REMOVE_FROM_WEEK} from "./types";
 import {SEARCH_FOODS, SEARCH_FOODS_DONE, SEARCH_FOODS_ERROR} from "./types";
 import {ADD_ONE_FOOD} from "./types";
 import {dayOrder} from "./types";
-import {
-    initAction,
-    initWeekState,
-    initFoodState,
-    initConfigState,
-} from "./types";
+import {initAction} from "./types";
+import {initWeekState, initFoodState, initConfigState} from "./types";
 import {searchAllFoods} from "./actions";
 import {fetchRecipes} from "./api";
 
@@ -120,19 +116,9 @@ export function config(
 }
 
 export const history = createBrowserHistory();
-const router_history = routerMiddleware(history);
-
-export const reducers = combineReducers({
-    week,
-    recipes,
-    config,
-    router,
-});
-
-export const store = () =>
-    createStore(
-        reducers,
-        composeWithDevTools(applyMiddleware(thunk, router_history)),
-    );
+export const location = routerMiddleware(history);
+export const reducers = combineReducers({week, recipes, config, router});
+export const middlewares = compose(applyMiddleware(thunk, location));
+export const store = () => createStore(reducers, middlewares);
 
 export default reducers;

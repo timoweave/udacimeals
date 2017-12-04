@@ -14,19 +14,13 @@ export function addRecipe({day, time, meal}: DayTimeMeal): AddRecipeAction {
     return {type: ADD_RECIPE, day, time, meal};
 }
 
-export function removeFromWeek({
-    day,
-    time,
-    meal,
-}: DayTimeMeal): RemoveFromWeekAction {
+export function removeFromWeek(arg: DayTimeMeal): RemoveFromWeekAction {
+    const {day, time, meal} = arg;
     return {type: REMOVE_FROM_WEEK, day, time};
 }
 
-export function openFoodModal(
-    day: Day,
-    time: Time,
-    meal: ?Meal,
-): OpenModalAction {
+export function openFoodModal(arg: DayTimeMeal): OpenModalAction {
+    const {day, time, meal} = arg;
     return {type: OPEN_MODAL, day, time, meal};
 }
 

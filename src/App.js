@@ -41,16 +41,11 @@ const Header = ({timeOrder}: {timeOrder: Array<Time>}): Element<"ul"> => (
     </ul>
 );
 
-const Entry = ({
-    day,
-    time,
-    meal,
-    open = (url: string, day: Day, time: Time, meal: ?Meal): void => {},
-}: EntryProps): Element<"div"> =>
+const Entry = ({day, time, meal, open}: EntryProps): Element<"div"> =>
     meal !== null && meal !== undefined ? (
         <div className="food-item">
             <img src={meal.image} alt={meal.label} />
-            <button onClick={() => open("/list", day, time, meal)}>
+            <button onClick={() => open && open("/list", day, time, meal)}>
                 Clear
             </button>
         </div>
@@ -58,7 +53,7 @@ const Entry = ({
         <div>
             <button
                 className="icon-btn"
-                onClick={() => open("/add", day, time, meal)}
+                onClick={() => open && open("/add", day, time, meal)}
             >
                 <CalendarPlusO size={30} />
             </button>
@@ -68,7 +63,7 @@ const Entry = ({
 const mapDispatchToEntry = dispatch => ({
     open: (url: string, day: Day, time: Time, meal: ?Meal): void => {
         dispatch(push(`${url}/${day}/${time}`));
-        dispatch(openFoodModal(day, time, meal));
+        dispatch(openFoodModal({day, time, meal}));
     },
 });
 
@@ -141,31 +136,24 @@ export const FoodList = ({foods, onSelect}: any): Element<"ul" | "p"> => {
     );
 };
 
-export const AddFood = ({
-    day,
-    time,
-    meal,
-    foods,
-    path,
-    opened,
-    save,
-    search,
-    select,
-    close,
-}: *): Element<typeof Modal> => (
-    <Modal isOpen={opened} style={{width: "80%", height: "80%"}}>
-        <h1>
-            {day !== null && time !== null
-                ? `Meal for ${capitalize(day)} ${capitalize(time)}`
-                : `Please specify which day and time`}
-        </h1>
-        <input placeholder="search food" onChange={search} />
-        <button onClick={() => close()}>Cancel</button>
-        <button onClick={save(day, time, meal)}>Save</button>
-        {foods.length ? <h2>Recipes Found </h2> : null}
-        <FoodList foods={foods} onSelect={select} />
-    </Modal>
-);
+export const AddFood = (params: *): Element<typeof Modal> => {
+    const {day, time, meal, foods, path} = params;
+    const {opened, save, search, select, close} = params;
+    return (
+        <Modal isOpen={opened} style={{width: "80%", height: "80%"}}>
+            <h1>
+                {day !== null && time !== null
+                    ? `Meal for ${capitalize(day)} ${capitalize(time)}`
+                    : `Please specify which day and time`}
+            </h1>
+            <input placeholder="search food" onChange={search} />
+            <button onClick={() => close()}>Cancel</button>
+            <button onClick={save(day, time, meal)}>Save</button>
+            {foods.length ? <h2>Recipes Found </h2> : null}
+            <FoodList foods={foods} onSelect={select} />
+        </Modal>
+    );
+};
 
 const mapStateToAddFood = (state: Store): * => {
     const {foods} = state.recipes;
