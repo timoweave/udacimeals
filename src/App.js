@@ -47,13 +47,17 @@ export function Header(props: HeaderProps): Element<"ul"> {
 }
 
 export function Entry(props: EntryProps): Element<"div"> {
-    const {day, time, meal = null, open = null, remove = null} = props;
+    const {day, time, meal = null} = props;
+    const {open = null, remove = null, shop = null} = props;
     const add = () => {
-        console.log({day, time, meal, open});
+        console.log({day, time, meal, open: "clicked"});
         open && open("/search", day, time, meal);
     };
     const del = () => remove && remove({day, time});
-    const list = () => () => open && open("/list", day, time, meal);
+    const list = () => {
+        console.log({day, time, meal, shop: "clicked"});
+        shop && shop("/shop", day, time, meal);
+    };
     const meal_picked = meal !== null && meal !== undefined;
 
     return meal_picked ? (
@@ -83,6 +87,11 @@ function mapDispatchToEntry(dispatch: *): * {
             dispatch(push(`${url}/${day}/${time}`));
             dispatch(loadCachedFoods());
             dispatch(openFoodModal({day, time, meal}));
+        },
+        shop: (url: string, day: Day, time: Time, meal: ?Meal): void => {
+            dispatch(push(`${url}/${day}/${time}`));
+            // dispatch(loadCachedFoods());
+            // dispatch(openFoodModal({day, time, meal}));
         },
         remove: ({day, time}: DayTimeMeal): void =>
             dispatch(removeFromWeek({day, time, meal: null})),
@@ -128,62 +137,60 @@ export function Content(props: ContentProps): Element<"div"> {
 }
 
 function Shop(props: *): Element<typeof Modal> {
+    const {day, time, meal, path} = props;
+    const {close, opened} = props;
+    console.log({day, time, meal});
     return (
         <Modal
             overlayClassName="overlay"
             className="modal"
-            isOpen={true}
+            isOpen={opened}
             contentLabel="Modal"
         >
-            <div>
-                <h1>Hello Shopping Food </h1>
+            <div className="shopping-list-detail">
+                <div>
+                    <img alt="meal image" src={meal && meal.image} />
+                </div>
+                <ShoppingList list={meal && meal.ingredientLines} />
+                <div>
+                    <button className="icon-btn" onClick={close}>
+                        <TimesCircleO size={80} />
+                    </button>
+                </div>
             </div>
         </Modal>
     );
 }
 
 function mapStateToShop(state: Store): * {
-    const {founds} = state.foods;
-    const {pathname} = state.router.location;
-    const opened = pathname.match("^/search") === null ? false : true;
-    const [root, add, day, time] = pathname.split("/");
+    const {week, router} = state;
+    const {pathname} = router.location;
+    const opened = pathname.match("^/shop") === null ? false : true;
+    const [root, , day, time] = pathname.split("/");
+    const meal = week[day][time];
 
-    return {...state.config, founds, opened, day, time};
+    return {...state.config, opened, day, time, meal};
 }
 
 function mapDispatchToShop(dispatch: *): * {
     return {
-        close: (): void => {
-            dispatch(closeFoodModal());
-            dispatch(clearSearchAllFoods());
-            dispatch(goBack());
-        },
-        search: (event: *): void => {
-            const query: string = event.target.value;
-            dispatch(searchAllFoods(query));
-        },
-        select: ({label, image, calories, source}): void => {},
-        save: (day: Day, time: Time, meal: Meal): * => {
-            return (event: *): void => {
-                dispatch(saveFoodModal(day, time, meal));
-                dispatch(goBack());
-            };
-        },
+        close: (): void => dispatch(goBack()),
     };
 }
 
 export const ConnectedShop = connect(mapStateToShop, mapDispatchToShop)(Shop);
 
 export function ShoppingList(props: ShoppingListProps): Element<"div"> {
-    const {list} = props;
+    const {list = null} = props;
 
     return (
         <div className="ingredients-list">
             <h3 className="subheader">Your Shopping List</h3>
             <ul>
-                {list.map((item: string, ith: number): Element<"li"> => (
-                    <li key={ith}>{item}</li>
-                ))}
+                {list &&
+                    list.map((item: string, ith: number): Element<"li"> => (
+                        <li key={ith}>{item}</li>
+                    ))}
             </ul>
         </div>
     );
@@ -265,7 +272,7 @@ function mapStateToSearch(state: Store): * {
     const {founds, selected: meal} = state.foods;
     const {pathname} = state.router.location;
     const opened = pathname.match("^/search") === null ? false : true;
-    const [root, add, day, time] = pathname.split("/");
+    const [root, , day, time] = pathname.split("/");
 
     return {...state.config, founds, opened, day, time, meal};
 }

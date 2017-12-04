@@ -169,6 +169,7 @@ li {
 .ingredients-list li {
   font-size: 24px;
   padding: 5px;
+  /* list-style-type: decimal; */
 }
 
 .food-item {
