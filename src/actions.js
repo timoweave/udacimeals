@@ -1,17 +1,14 @@
 import {ADD_RECIPE, REMOVE_FROM_WEEK} from "./types";
 import {LOADING_FOOD} from "./types";
-import {TOGGLE_MODAL, SAVE_MODAL, OPEN_MODAL, CLOSE_MODAL} from "./types";
+import {SAVE_MODAL, OPEN_MODAL, CLOSE_MODAL} from "./types";
 import {SEARCH_FOODS, SEARCH_FOODS_DONE, SEARCH_FOODS_ERROR} from "./types";
-import {Dispatch} from "./types";
 import {fetchRecipes} from "./api";
 
-import type {
-    AddRecipeAction,
-    RemoveFromWeekAction,
-    ToggleModalAction,
-    LoadingFoodAction,
-} from "./types";
-import type {DayTimeMeal, Opened, Loaded} from "./types";
+import type {Dispatch} from "./types";
+import type {AddRecipeAction, RemoveFromWeekAction} from "./types";
+import type {LoadingFoodAction, CloseModalAction} from "./types";
+import type {SaveModalAction, OpenModalAction} from "./types";
+import type {Time, Day, Meal, DayTimeMeal, Loaded} from "./types";
 
 export function addRecipe({day, time, meal}: DayTimeMeal): AddRecipeAction {
     return {type: ADD_RECIPE, day, time, meal};
@@ -28,8 +25,8 @@ export function removeFromWeek({
 export function openFoodModal(
     day: Day,
     time: Time,
-    meal: Meal,
-): ToggleModalAction {
+    meal: ?Meal,
+): OpenModalAction {
     return {type: OPEN_MODAL, day, time, meal};
 }
 
@@ -37,16 +34,12 @@ export function saveFoodModal(
     day: Day,
     time: Time,
     meal: Meal,
-): ToggleModalAction {
+): SaveModalAction {
     return {type: SAVE_MODAL, day, time, meal};
 }
 
-export function closeFoodModal(): ToggleModalAction {
+export function closeFoodModal(): CloseModalAction {
     return {type: CLOSE_MODAL};
-}
-
-export function toggleModal({opened}: Opened): ToggleModalAction {
-    return {type: TOGGLE_MODAL, opened};
 }
 
 export function loadingFood({loaded}: Loaded): LoadingFoodAction {

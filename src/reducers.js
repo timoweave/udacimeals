@@ -1,11 +1,11 @@
 import {createStore, combineReducers, compose, applyMiddleware} from "redux";
 import thunk from "redux-thunk";
-import createHistory from "history/createBrowserHistory";
+import {createBrowserHistory} from "history";
 import {ConnectedRouter, routerReducer as router} from "react-router-redux";
 import {routerMiddleware} from "react-router-redux";
 import {composeWithDevTools} from "redux-devtools-extension";
 
-import {TOGGLE_MODAL, SAVE_MODAL, OPEN_MODAL, CLOSE_MODAL} from "./types";
+import {SAVE_MODAL, OPEN_MODAL, CLOSE_MODAL} from "./types";
 import {LOADING_FOOD, NO_ACTION} from "./types";
 import {ADD_RECIPE, REMOVE_FROM_WEEK} from "./types";
 import {SEARCH_FOODS, SEARCH_FOODS_DONE, SEARCH_FOODS_ERROR} from "./types";
@@ -101,19 +101,15 @@ export function config(
     switch (action.type) {
         case CLOSE_MODAL:
             console.log({action, state});
-            return {...state, opened: false, day: null, time: null, meal: null};
+            return {...state, meal: null};
         case SAVE_MODAL: {
-            const {day, time, meal} = action;
-            return {...state, day, time, meal};
+            const {meal} = action;
+            return {...state, meal};
         }
         case OPEN_MODAL: {
-            const {day, time, meal} = action;
-            console.log({action, state, day, time, meal});
-            return {...state, opened: true, day, time, meal};
+            const {meal} = action;
+            return {...state, meal};
         }
-        case TOGGLE_MODAL:
-            console.log({action, state});
-            return {...state, opened: action.opened};
         case LOADING_FOOD:
             console.log({action, state});
             return {...state, loaded: action.loaded};
@@ -123,7 +119,7 @@ export function config(
     }
 }
 
-export const history = createHistory();
+export const history = createBrowserHistory();
 const router_history = routerMiddleware(history);
 
 export const reducers = combineReducers({

@@ -74,12 +74,12 @@ export type Actions = {
     +del?: (arg: DayTimeMeal) => void,
     +search?: (query?: string) => void,
     +goto?: (url: string) => void,
-    open: () => void,
-    close: () => void,
+    +open?: (url: string, day: Day, time: Time, meal: ?Meal) => void,
+    +close?: () => void,
 };
 
 export type EntryProps = DayTimeMeal & Actions;
-export type ContentProps = WeekTimeOrder & Actions;
+export type ContentProps = WeekTimeOrder;
 
 export const ADD_RECIPE: "ADD_RECIPE" = "ADD_RECIPE";
 export const REMOVE_FROM_WEEK: "REMOVE_FROM_WEEK" = "REMOVE_FROM_WEEK";
@@ -100,31 +100,24 @@ export type RemoveFromWeekAction = {
 export const OPEN_MODAL: "OPEN_MODAL" = "OPEN_MODAL";
 export const SAVE_MODAL: "SAVE_MODAL" = "SAVE_MODAL";
 export const CLOSE_MODAL: "CLOSE_MODAL" = "CLOSE_MODAL";
-export const TOGGLE_MODAL: "TOGGLE_MODAL" = "TOGGLE_MODAL";
 export const LOADING_FOOD: "LOADING_FOOD" = "LOADING_FOOD";
-
-export type ToggleModalAction = {
-    +type: typeof TOGGLE_MODAL,
-    opened: boolean,
-};
 
 export type OpenModalAction = {
     +type: typeof OPEN_MODAL,
     day: Day,
     time: Time,
-    meal: Meal,
+    meal: ?Meal,
 };
 
 export type SaveModalAction = {
     +type: typeof SAVE_MODAL,
     day: Day,
     time: Time,
-    meal: Meal,
+    meal: ?Meal,
 };
 
 export type CloseModalAction = {
     +type: typeof CLOSE_MODAL,
-    opened: boolean,
 };
 
 export type LoadingFoodAction = {
@@ -167,15 +160,16 @@ export type FoodAction =
     | SearchAllFoodErrorAction
     | AddFoodAction
     | NoAction;
+
 export type ConfigAction =
     | LoadingFoodAction
-    | ToggleModalAction
     | OpenModalAction
     | CloseModalAction
+    | SaveModalAction
     | NoAction;
+
 export type Action = WeekAction | FoodAction | ConfigAction | NoAction;
 
-export type Opened = {opened: boolean};
 export type Loaded = {loaded: boolean};
 
 export type WeekState = {
@@ -194,10 +188,7 @@ export type FoodState = {
 };
 
 export type ConfigState = {
-    opened: boolean,
     loading: boolean,
-    day: ?Day,
-    time: ?Time,
     meal: ?Meal,
 };
 
@@ -227,9 +218,6 @@ export const initFoodState: FoodState = {
 };
 
 export const initConfigState: ConfigState = {
-    opened: false, // modal is opened (if true)
     loading: false,
-    day: null,
-    time: null,
     meal: null,
 };

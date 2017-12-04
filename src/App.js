@@ -4,15 +4,17 @@ import Modal from "react-modal";
 import Loading from "react-loading";
 import RightArrow from "react-icons/lib/fa/arrow-circle-right";
 import CalendarPlusO from "react-icons/lib/fa/calendar-plus-o";
-import {push} from "react-router-redux";
+import {push, goBack, CALL_HISTORY_METHOD} from "react-router-redux";
 import {Switch} from "react-router-dom";
 
 import {getOrderedDayMeals} from "./reducers";
 import {addRecipe, removeFromWeek, searchAllFoods} from "./actions";
 import {openFoodModal, saveFoodModal, closeFoodModal} from "./actions";
 import {capitalize} from "./helpers";
-import {timeOrder, WeekTimeOrder, ShoppingList, MONDAY} from "./types";
+import {timeOrder, MONDAY} from "./types";
 import {fetchRecipes} from "./api";
+
+import type {ShoppingList} from "./types";
 
 import logo from "./logo.svg";
 import "./App.css";
@@ -26,6 +28,7 @@ export type Props = Actions & {
     +week: WeekState,
     +recipes: FoodState,
     +config: ConfigState,
+    +router: *,
 };
 
 const Header = ({timeOrder}: {timeOrder: Array<Time>}): Element<"ul"> => (
@@ -38,7 +41,12 @@ const Header = ({timeOrder}: {timeOrder: Array<Time>}): Element<"ul"> => (
     </ul>
 );
 
-const Entry = ({day, time, meal, open}: EntryProps): Element<"div"> =>
+const Entry = ({
+    day,
+    time,
+    meal,
+    open = (url: string, day: Day, time: Time, meal: ?Meal): void => {},
+}: EntryProps): Element<"div"> =>
     meal !== null && meal !== undefined ? (
         <div className="food-item">
             <img src={meal.image} alt={meal.label} />
@@ -58,7 +66,7 @@ const Entry = ({day, time, meal, open}: EntryProps): Element<"div"> =>
     );
 
 const mapDispatchToEntry = dispatch => ({
-    open: (url: string, day: Day, time: Time, meal: Meal): void => {
+    open: (url: string, day: Day, time: Time, meal: ?Meal): void => {
         dispatch(push(`${url}/${day}/${time}`));
         dispatch(openFoodModal(day, time, meal));
     },
@@ -106,8 +114,8 @@ export const ShoppingItems = ({list}: ShoppingList): Element<"div"> => (
     </div>
 );
 
-export const FoodList = ({food_list, onSelect}: any): Element<"ul" | "p"> => {
-    if (food_list.length === 0) {
+export const FoodList = ({foods, onSelect}: any): Element<"ul" | "p"> => {
+    if (foods.length === 0) {
         return <p>Your search has 0 results.</p>;
     }
 
@@ -116,7 +124,7 @@ export const FoodList = ({food_list, onSelect}: any): Element<"ul" | "p"> => {
 
     return (
         <ul className="food-list">
-            {food_list.map(({label, image, calories, source}: Meal): Element<
+            {foods.map(({label, image, calories, source}: Meal): Element<
                 "li",
             > => (
                 <li
@@ -142,51 +150,47 @@ export const AddFood = ({
     opened,
     save,
     search,
+    select,
     close,
 }: *): Element<typeof Modal> => (
-    <Modal isOpen={opened || path} style={{width: "80%", height: "80%"}}>
+    <Modal isOpen={opened} style={{width: "80%", height: "80%"}}>
         <h1>
             {day !== null && time !== null
                 ? `Meal for ${capitalize(day)} ${capitalize(time)}`
                 : `Please specify which day and time`}
         </h1>
         <input placeholder="search food" onChange={search} />
-        <button onClick={() => close("/")}>Cancel</button>
-        <button onClick={save("/", day, time, meal)}>Save</button>
-        {foods.length ? <h2>Found </h2> : null}
-        <ul>
-            {foods.map(f => (
-                <li key={f.id}>
-                    <div>
-                        <img src={f.image} />
-                        <p>{f.label}</p>
-                    </div>
-                </li>
-            ))}
-        </ul>
+        <button onClick={() => close()}>Cancel</button>
+        <button onClick={save(day, time, meal)}>Save</button>
+        {foods.length ? <h2>Recipes Found </h2> : null}
+        <FoodList foods={foods} onSelect={select} />
     </Modal>
 );
 
-const mapStateToAddFood = (state: Store): * => ({
-    ...state.config,
-    foods: state.recipes.foods,
-    path: state.router.location.pathname.match("/add"),
-});
+const mapStateToAddFood = (state: Store): * => {
+    const {foods} = state.recipes;
+    const {pathname} = state.router.location;
+    const opened = pathname.match("^/add") === null ? false : true;
+    const [root, add, day, time] = pathname.split("/");
 
-const mapDispatchToAddFood = (dispatch: *): void => ({
-    close: (url: string): void => {
+    return {...state.config, foods, opened, day, time};
+};
+
+const mapDispatchToAddFood = (dispatch: *): * => ({
+    close: (): void => {
         dispatch(closeFoodModal());
-        dispatch(push(url));
+        dispatch(goBack());
     },
     search: (event: *): void => {
         const query: string = event.target.value;
         dispatch(searchAllFoods(query));
     },
-    save: (url: string, day: Day, time: Time, meal: Meal): * => (
-        event: *,
-    ): void => {
-        dispatch(saveFoodModal(day, time, meal));
-        dispatch(push(url));
+    select: ({label, image, calories, source}): void => {},
+    save: (day: Day, time: Time, meal: Meal): * => {
+        return (event: *): void => {
+            dispatch(saveFoodModal(day, time, meal));
+            dispatch(goBack());
+        };
     },
 });
 
@@ -210,9 +214,11 @@ export class App extends Component<Props> {
     }
 }
 
-export const ConnectedSwitch = connect(state => ({
+const mapStateToSwitch = (state: *): * => ({
     location: state.location,
-}))(Switch);
+});
+
+export const ConnectedSwitch = connect(mapStateToSwitch)(Switch);
 
 const mapStateToApp = (state: Store): Props => ({
     week: state.week,
@@ -221,7 +227,7 @@ const mapStateToApp = (state: Store): Props => ({
     router: state.router,
 });
 
-const mapDispatchToApp = dispatch => ({
+const mapDispatchToApp = (dispatch: *): * => ({
     add: ({day, time, meal}: DayTimeMeal): void =>
         dispatch(addRecipe({day, time, meal})),
     del: ({day, time}: DayTimeMeal): void =>
