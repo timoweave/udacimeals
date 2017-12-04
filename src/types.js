@@ -63,7 +63,7 @@ export type WeekTimeOrder = {
     timeOrder: Array<Time>,
 };
 
-export type ShoppingList = {
+export type ShoppingListProps = {
     list: Array<string>,
 };
 
@@ -79,8 +79,26 @@ export type Actions = {
     +close?: () => void,
 };
 
-export type EntryProps = DayTimeMeal & Actions;
+export type HeaderProps = {timeOrder: Array<Time>};
+export type EntryProps = {
+    +day: Day,
+    +time: Time,
+    +meal: ?Meal,
+    +open: ?(url: string, day: Day, time: Time, meal: ?Meal) => void,
+};
 export type ContentProps = WeekTimeOrder;
+export type AppProps = {
+    +week: WeekState,
+    +foods: FoodState,
+    +config: ConfigState,
+    +router: *,
+    +add?: (arg: DayTimeMeal) => void,
+    +del?: (arg: DayTimeMeal) => void,
+    +search?: (query?: string) => void,
+    +goto?: (url: string) => void,
+    +open?: (url: string, day: Day, time: Time, meal: ?Meal) => void,
+    +close?: () => void,
+};
 
 export const ADD_RECIPE: "ADD_RECIPE" = "ADD_RECIPE";
 export const REMOVE_FROM_WEEK: "REMOVE_FROM_WEEK" = "REMOVE_FROM_WEEK";
@@ -129,6 +147,7 @@ export type LoadingFoodAction = {
 export const SEARCH_FOODS: "SEARCH_FOODS" = "SEARCH_FOODS";
 export const SEARCH_FOODS_DONE: "SEARCH_FOODS_DONE" = "SEARCH_FOODS_DONE";
 export const SEARCH_FOODS_ERROR: "SEARCH_FOODS_ERROR" = "SEARCH_FOODS_ERROR";
+export const SEARCH_FOODS_CLEAR: "SEARCH_FOODS_CLEAR" = "SEARCH_FOODS_CLEAR";
 export const ADD_ONE_FOOD: "ADD_ONE_FOOD" = "ADD_ONE_FOOD";
 
 export type SearchAllFoodAction = {
@@ -139,13 +158,18 @@ export type SearchAllFoodAction = {
 export type SearchAllFoodDoneAction = {
     +type: typeof SEARCH_FOODS_DONE,
     +query: string,
-    +foods: Array<Meal>,
+    +founds: Array<Meal>,
 };
 
 export type SearchAllFoodErrorAction = {
     +type: typeof SEARCH_FOODS_ERROR,
     +query: string,
     +error: *,
+};
+
+export type SearchAllFoodClearAction = {
+    +type: typeof SEARCH_FOODS_CLEAR,
+    +founds: [],
 };
 
 export type AddFoodAction = {
@@ -159,6 +183,7 @@ export type FoodAction =
     | SearchAllFoodAction
     | SearchAllFoodDoneAction
     | SearchAllFoodErrorAction
+    | SearchAllFoodClearAction
     | AddFoodAction
     | NoAction;
 
@@ -184,7 +209,7 @@ export type WeekState = {
 };
 
 export type FoodState = {
-    foods: Array<Meal>,
+    founds: Array<Meal>,
     [string]: Meal,
 };
 
@@ -195,7 +220,7 @@ export type ConfigState = {
 
 export type Store = {
     week: WeekState,
-    recipes: FoodState,
+    foods: FoodState,
     config: ConfigState,
     router: *,
 };
@@ -215,7 +240,7 @@ export const initWeekState: WeekState = {
 };
 
 export const initFoodState: FoodState = {
-    foods: [],
+    founds: [],
 };
 
 export const initConfigState: ConfigState = {

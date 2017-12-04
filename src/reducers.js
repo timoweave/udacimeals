@@ -1,5 +1,6 @@
-import {createStore, combineReducers, applyMiddleware} from "redux";
 import thunk from "redux-thunk";
+
+import {createStore, combineReducers, applyMiddleware} from "redux";
 import {createBrowserHistory} from "history";
 import {routerReducer as router} from "react-router-redux";
 import {routerMiddleware} from "react-router-redux";
@@ -8,7 +9,8 @@ import {composeWithDevTools as compose} from "redux-devtools-extension";
 import {SAVE_MODAL, OPEN_MODAL, CLOSE_MODAL} from "./types";
 import {LOADING_FOOD, NO_ACTION} from "./types";
 import {ADD_RECIPE, REMOVE_FROM_WEEK} from "./types";
-import {SEARCH_FOODS, SEARCH_FOODS_DONE, SEARCH_FOODS_ERROR} from "./types";
+import {SEARCH_FOODS, SEARCH_FOODS_CLEAR} from "./types";
+import {SEARCH_FOODS_DONE, SEARCH_FOODS_ERROR} from "./types";
 import {ADD_ONE_FOOD} from "./types";
 import {dayOrder} from "./types";
 import {initAction} from "./types";
@@ -55,23 +57,27 @@ export function getOrderedDayMeals(
     }, []);
 }
 
-export function recipes(
+export function foods(
     state: FoodState = initFoodState,
     action: FoodAction = initAction,
 ): FoodState {
     switch (action.type) {
         case SEARCH_FOODS: {
-            console.log({state, action});
-            return {...state, foods: []};
+            return {...state, founds: []};
+        }
+        case SEARCH_FOODS_CLEAR: {
+            return {...state, founds: []};
         }
         case SEARCH_FOODS_DONE: {
-            const {foods} = action;
-            console.log({state, action});
-            return {...state, foods};
+            const {founds} = action;
+            const recipes = founds.reduce((ans, food) => {
+                ans[food.id] = food;
+                return ans;
+            }, {});
+            return {...state, founds, ...recipes};
         }
         case SEARCH_FOODS_ERROR: {
-            console.log({state, action});
-            // const foods = fetchRecipes(action.query);
+            console.error({state, action});
             return state;
         }
         case ADD_ONE_FOOD: {
@@ -96,15 +102,12 @@ export function config(
 ): ConfigState {
     switch (action.type) {
         case CLOSE_MODAL:
-            console.log({action, state});
             return {...state, meal: null};
         case SAVE_MODAL: {
-            const {meal} = action;
-            return {...state, meal};
+            return {...state, meal: action.meal};
         }
         case OPEN_MODAL: {
-            const {meal} = action;
-            return {...state, meal};
+            return {...state, meal: action.meal};
         }
         case LOADING_FOOD:
             console.log({action, state});
@@ -117,7 +120,7 @@ export function config(
 
 export const history = createBrowserHistory();
 export const location = routerMiddleware(history);
-export const reducers = combineReducers({week, recipes, config, router});
+export const reducers = combineReducers({week, foods, config, router});
 export const middlewares = compose(applyMiddleware(thunk, location));
 export const store = () => createStore(reducers, middlewares);
 
